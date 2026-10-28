@@ -1,8 +1,11 @@
 import express, { Request, Response } from "express";
 import { readJSON, writeJSON } from "./db";
+import morgan from "morgan";
+import * as os from "os";
 
 const app = express();
 app.use(express.json());
+app.use(morgan("combined"));
 
 interface Articulo {
   id: number;
@@ -76,6 +79,22 @@ app.delete("/articulos/:id", (req, res) => {
     return res.status(404).json({ error: "Articulo no encontrado" });
   writeJSON(FILE, filtrados);
   res.status(204).send();
+});
+
+app.get("/health", (req: Request, res: Response) => {
+  if (req.query.simular === "falla") {
+    return res.status(503).json({
+      estado: "no saludable",
+      nodo: os.hostname(),
+      timestamp: new Date().toISOString(),
+      mensaje: "Falla simulada",
+    });
+  }
+  res.status(200).json({
+    estado: "saludable",
+    nodo: os.hostname(),
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // ---------- Arranque ----------
